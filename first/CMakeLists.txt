@@ -3,6 +3,6 @@ project(industrialProgramming)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(industrialProgramming main.cpp ./lib/MatrixCalculations.h)
+add_executable(industrialProgramming main.cpp)
 
 target_include_directories(industrialProgramming PUBLIC ./lib)

@@ -55,7 +55,8 @@ int main() {
      break;
   }
 
-  MatrixCalculations::multiply_matrix(A_mtrx, B_mtrx);
+  auto result_matrix = MatrixCalculations::multiply_matrix(A_mtrx, B_mtrx);
+  cout << result_matrix << endl;
 
   return 0;
 }
