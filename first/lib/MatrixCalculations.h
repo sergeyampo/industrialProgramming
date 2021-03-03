@@ -1,21 +1,17 @@
-//
-// Created by sergeyampo on 02.03.2021.
-//
-
 #ifndef INDUSTRIALPROGRAMMING_FIRST_LIB_MATRIXCALCULATIONS_H_
 #define INDUSTRIALPROGRAMMING_FIRST_LIB_MATRIXCALCULATIONS_H_
 #include "../Matrix.h"
 #include <array>
+#include <vector>
 #include <algorithm>
 
 
 class MatrixCalculations {
-  friend class Matrix;
-
  private:
-  static Pair<Matrix, Matrix> align_matrix(const Matrix& mtrx_f, const Matrix& mtrx_s) {
-	const auto matrix_sizes = std::Array<int64_t, 4>{mtrx_f.n, mtrx_f.m, mtrx_s.n, mtrx_s.m};
-	const auto max_length = std::max(matrix_sizes);
+  static std::pair<Matrix, Matrix> align_matrix(const Matrix& mtrx_f, const Matrix& mtrx_s) {
+	const auto matrix_sizes = std::array<int64_t, 4>{mtrx_f.n, mtrx_f.m, mtrx_s.n, mtrx_s.m};
+	const auto max_length = *std::max_element(begin(matrix_sizes), end(matrix_sizes));
+	constexpr int64_t zero = 0;
 
 	int64_t l = 2;
 	if (l >= max_length) {
@@ -24,10 +20,10 @@ class MatrixCalculations {
 
 	for (; l < max_length; l *= 2);
 
-	Matrix aligned_first_matrix(l, l, 0);
+	Matrix aligned_first_matrix(l, l, zero);
 	aligned_first_matrix = mtrx_f;
 
-	Matrix aligned_second_matrix(l, l, 0);
+	Matrix aligned_second_matrix(l, l, zero);
 	aligned_second_matrix = mtrx_s;
 
 	return {aligned_first_matrix, aligned_second_matrix};
@@ -38,7 +34,7 @@ class MatrixCalculations {
 	std::vector<Matrix> res_matrix;
 	res_matrix.reserve(8);
 	for (short i = 0; i < 8; ++i) {
-	  res_matrix.emplace_back(Matrix{l_h, l_h, 0});
+	  res_matrix.emplace_back(Matrix{l_h, l_h, static_cast<int64_t>(0)});
 	}
 	res_matrix[0].explicit_assign(lhs);
 	res_matrix[1].explicit_assign(lhs, 0, l_h);
@@ -52,7 +48,7 @@ class MatrixCalculations {
 	return res_matrix;
   }
 
-  static void calculate_temp_matrix(vector<Matrix>& temp_matrix, const vector<Matrix>& structured_matrix) {
+  static void calculate_temp_matrix(std::vector<Matrix>& temp_matrix, std::vector<Matrix>& structured_matrix) {
 	const int64_t l_h = temp_matrix[0].n;
 	for (ptrdiff_t i = 0; i < l_h; ++i) {
 	  for (ptrdiff_t j = 0; j < l_h; ++j) {
@@ -75,28 +71,77 @@ class MatrixCalculations {
 	  }
 	}
 	for (short i = 8; i < 12; ++i) {
-	  structured_matrix.emplace_back(Matrix{l_h, l_h});
+	  structured_matrix.emplace_back(Matrix{l_h, l_h, static_cast<int64_t>(0)});
 	}
-	structured_matrix[8].data[i][j] = temp_matrix[0].data[i][j] + temp_matrix[3].data[i][j] - temp_matrix[4].data[i][j] + temp_matrix[6].data[i][j];
-	structured_matrix[9].data[i][j] = temp_matrix[2].data[i][j] + temp_matrix[4].data[i][j];
-	structured_matrix[10].data[i][j] = temp_matrix[1].data[i][j] + temp_matrix[3].data[i][j];
-	structured_matrix[11].data[i][j] = temp_matrix[0].data[i][j] - temp_matrix[1].data[i][j] + temp_matrix[2].data[i][j] + temp_matrix[5].data[i][j];
-	
+	for (ptrdiff_t i = 0; i < l_h; ++i) {
+	  for (ptrdiff_t j = 0; j < l_h; ++j) {
+		structured_matrix[8].data[i][j] =
+			temp_matrix[0].data[i][j] + temp_matrix[3].data[i][j] - temp_matrix[4].data[i][j]
+				+ temp_matrix[6].data[i][j];
+		structured_matrix[9].data[i][j] = temp_matrix[2].data[i][j] + temp_matrix[4].data[i][j];
+		structured_matrix[10].data[i][j] = temp_matrix[1].data[i][j] + temp_matrix[3].data[i][j];
+		structured_matrix[11].data[i][j] =
+			temp_matrix[0].data[i][j] - temp_matrix[1].data[i][j] + temp_matrix[2].data[i][j]
+				+ temp_matrix[5].data[i][j];
+	  }
+	}
   }
 
-  static Matrix build_result_matrix()
+  static Matrix build_result_matrix(const std::vector<Matrix>& structured_matrix) {
+	const auto l = structured_matrix[0].m * 2;
+	Matrix res_matrix(l, l, static_cast<int64_t>(0));
+
+	for (ptrdiff_t i = 0; i < l; ++i) {
+	  for (ptrdiff_t j = 0; j < l; ++j) {
+		res_matrix.data[i][j] = structured_matrix[8].data[i][j];
+		res_matrix.data[i][j + l / 2] = structured_matrix[9].data[i][j];
+		res_matrix.data[i + l / 2][j] = structured_matrix[10].data[i][j];
+		res_matrix.data[i + l / 2][j + l / 2] = structured_matrix[11].data[i][j];
+	  }
+	}
+	int x = 0, f = 100, s = 100;
+	for (int i = 0; i < l; i++) {
+	  x = 0;
+	  for (int j = 0; j < l; j++) {
+		if (res_matrix.data[i][j] != 0) {
+		  x++;
+		  f = 100;
+		}
+	  }
+	  if (x == 0 && i < f) {
+		f = i;
+	  }
+	}
+	for (int i = 0; i < l; i++) {
+	  x = 0;
+	  for (int j = 0; j < l; j++) {
+		if (res_matrix.data[j][i] != 0) {
+		  x++;
+		  s = 100;
+		}
+	  }
+	  if (x == 0 && i < s) {
+		s = i;
+	  }
+	}
+	Matrix final_matrix(f, s, static_cast<int64_t>(0));
+	final_matrix = res_matrix;
+
+	return final_matrix;
+  }
 
  public:
   MatrixCalculations() = delete;
 
   ~MatrixCalculations() = delete;
 
-  static Matrix& multiply_matrix(Matrix& lhs, Matrix& rhs) {
-	auto[aligned_first_matrix, aligned_second_matrix] = align_matrix(lhs, rhs);
-	auto matrix_destructured = destructure_matrix(aligned_first_matrix, aligned_second_matrix);
-	vector<Matrix> temp_matrix(8, Matrix{matrix_destructured[0].n, matrix_destructured[0].n, 0});
+  static Matrix multiply_matrix(Matrix& lhs, Matrix& rhs) {
+	auto aligned_matrix = align_matrix(lhs, rhs);
+	auto matrix_destructured = destructure_matrix(aligned_matrix.first, aligned_matrix.second);
+	std::vector<Matrix> temp_matrix(8, Matrix{matrix_destructured[0].n, matrix_destructured[0].n, static_cast<int64_t>(0)});
 	calculate_temp_matrix(temp_matrix, matrix_destructured);
 
+	return build_result_matrix(matrix_destructured);
   }
 };
 

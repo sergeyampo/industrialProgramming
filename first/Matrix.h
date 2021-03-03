@@ -8,6 +8,7 @@
 
 
 class Matrix {
+  friend class MatrixCalculations;
  private:
   const int64_t n;
 
@@ -84,21 +85,23 @@ class Matrix {
   friend Matrix operator*(const Matrix&, const Matrix&);
 
   std::istream& fill_matrix(std::istream& in, const bool& is_rand = false) {
-	for (ptrdiff_t i = 0; i < n; ++i)
-	  for (ptrdiff_t j = 0; j < m; ++j)
-		in >> data[i][j];
-
-	if (is_rand)
+    if(!is_rand) {
+	  for (ptrdiff_t i = 0; i < n; ++i)
+		for (ptrdiff_t j = 0; j < m; ++j)
+		  in >> data[i][j];
+	}
+    else {
 	  fill_with_rand();
+	}
 
 	return in;
   }
 
-  int64_t get_rows_amount() noexcept(true) {
+  int64_t get_rows_amount() const noexcept(true) {
 	return n;
   }
 
-  int64_t get_column_amount() noexcept(true) {
+  int64_t get_column_amount() const noexcept(true) {
 	return m;
   }
 
@@ -110,8 +113,8 @@ class Matrix {
 };
 
 std::ostream& operator<<(std::ostream& out, const Matrix& mtrx) {
-  for (ptrdiff_t i = 0; i < n; ++i) {
-	for (ptrdiff_t j = 0; j < n; ++j) {
+  for (ptrdiff_t i = 0; i < mtrx.n; ++i) {
+	for (ptrdiff_t j = 0; j < mtrx.m; ++j) {
 	  out << mtrx.data[i][j] << " ";
 	}
 	out << "\n";
